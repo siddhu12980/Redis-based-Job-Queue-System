@@ -14,10 +14,15 @@ async function processSubmission(submission: string) {
 
             await client.lPush(`results:${problemId}`, runOutput);
 
+           await client.publish("problem_done", JSON.stringify({ problemId, output: runOutput }));
+
+
             console.log(`Python Output: ${runOutput}`);
         } catch (error) {
             console.error(`Error running Python code: ${error}`);
             await client.lPush(`results:${problemId}`, `Error: ${error}`);
+
+           await client.publish("problem_done", JSON.stringify({ problemId, error: (error as Error).message }));
 
 
         }
@@ -27,11 +32,18 @@ async function processSubmission(submission: string) {
             const runOutput = await runJavaScriptCode(code);
             await client.lPush(`results:${problemId}`, runOutput);
 
+           await client.publish("problem_done", JSON.stringify({ problemId, output: runOutput }));
+
+
             console.log(`JavaScript Output: ${runOutput}`);
 
         } catch (error) {
 
             await client.lPush(`results:${problemId}`, `Error: ${error}`);
+
+           await client.publish("problem_done", JSON.stringify({ problemId, error: (error as Error).message }));
+
+           
             console.error(`Error running JavaScript code: ${error}`);
 
         }
