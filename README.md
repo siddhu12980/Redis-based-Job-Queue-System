@@ -1,8 +1,8 @@
-# Redis-based Job Queue System
+# Redis-powered Job Queue with Pub-Sub Notifications
 
 ## Overview
 
-This project implements a simple job queue system using Redis, Express.js, and Node.js. It consists of a master component that receives and enqueues jobs, and a worker component that processes these jobs. The system is designed to handle code execution tasks in Python and JavaScript.
+This project implements a simple job queue system using Redis, Express.js, and Node.js. It consists of a master component that receives and enqueues jobs, and a worker component that processes these jobs. The system is designed to handle code execution tasks in Python and JavaScript. Additionally, it now includes a pub-sub model for real-time job completion notifications.
 
 ## Components
 
@@ -17,6 +17,13 @@ The master component is an Express.js server that:
 The worker component:
 - Continuously polls the Redis queue for new jobs
 - Dequeues and processes jobs, executing the submitted code based on the specified language
+- Publishes job completion messages to the 'problem_done' channel
+
+### 3. Subscriber
+
+A new component that:
+- Subscribes to the 'problem_done' channel
+- Receives real-time notifications when jobs are completed
 
 ## Prerequisites
 
@@ -36,12 +43,13 @@ The worker component:
    ```
    npm i /redisMaster
    npm i /redisWorker
+   npm i /redisSubscriber
    ```
 
 3. Ensure Redis is installed and running on your system.
 
 4. Configure Redis connection (if needed):
-   - Open `master.js` and `worker.js`
+   - Open `master.js`, `worker.js`, and `subscriber.js`
    - Modify the Redis client creation if your Redis server isn't running on default localhost:6379
 
 ## Running the System
@@ -61,8 +69,14 @@ The worker component:
    node dist/index.js
    ```
 
-## Usage
+3. Start the subscriber:
+   ```
+   cd redisSubscriber
+   tsc -b 
+   node dist/index.js
+   ```
 
+## Usage
 
 ### Submitting a Job
 
@@ -76,13 +90,14 @@ Send a POST request to `http://localhost:3000/submit` with a JSON body:
 }
 ```
 
-
-
 ### Getting Output
 ```bash
 http://localhost:3000/result/:id
 ```
 
+### Real-time Job Completion Notifications
+
+The subscriber component will automatically log messages to the console when jobs are completed. These messages are published by the worker to the 'problem_done' channel.
 
 ## Code Compilation and Execution
 
@@ -90,15 +105,7 @@ http://localhost:3000/result/:id
 The worker processes Python code using a separate child process. The submitted code is executed, and the output or error messages are stored in the Redis results list associated with the problem ID.
 
 ### JavaScript Execution:
- Similarly, JavaScript code is executed in a child process. The output or errors are captured and stored in Redis, allowing users to retrieve the results using the /result/:id endpoint.
-
-
-
-You can use curl, Postman, or any HTTP client to submit jobs.
-
-
-
-
+Similarly, JavaScript code is executed in a child process. The output or errors are captured and stored in Redis, allowing users to retrieve the results using the /result/:id endpoint.
 
 ## Architecture
 
@@ -112,13 +119,19 @@ You can use curl, Postman, or any HTTP client to submit jobs.
                                         +-------------+
                                         |   Worker    |
                                         +-------------+
+                                               |
+                                               v
+                                        +--------------+
+                                        |  Subscriber  |
+                                        +--------------+
 ```
 
 1. Clients submit jobs to the Master.
 2. Master enqueues jobs into the Redis Queue.
 3. Workers continuously poll the Redis Queue for new jobs.
 4. When a job is available, a Worker dequeues and processes it.
-
+5. Upon job completion, the Worker publishes a message to the 'problem_done' channel.
+6. The Subscriber receives real-time notifications of completed jobs.
 
 ## Limitations and Future Improvements
 
@@ -127,6 +140,7 @@ You can use curl, Postman, or any HTTP client to submit jobs.
 - Implement job prioritization and scheduling features.
 - Add proper logging and monitoring for production use.
 - Implement security measures for code execution.
+- Enhance the pub-sub model to include more detailed job status updates.
 
 ## Contributing
 
