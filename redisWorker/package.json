@@ -1,0 +1,22 @@
+{
+  "name": "workersub",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "cluster-key-slot": "^1.1.2",
+    "generic-pool": "^3.9.0",
+    "redis": "^4.7.0",
+    "vm2": "^3.9.19",
+    "yallist": "^4.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^22.7.3"
+  }
+}
